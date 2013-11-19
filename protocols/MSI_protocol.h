@@ -11,7 +11,10 @@
 typedef enum {
     MSI_CACHE_I = 1,
     MSI_CACHE_S,
-    MSI_CACHE_M
+    MSI_CACHE_M,
+    MSI_CACHE_IS,       //added
+    MSI_CACHE_IM,        //added 
+    MSI_CACHE_SM        //added 
 } MSI_cache_state_t;
 
 class MSI_protocol : public Protocol {
@@ -39,6 +42,9 @@ public:
     inline void do_snoop_I (Mreq *request);
     inline void do_snoop_S (Mreq * request);
     inline void do_snoop_M (Mreq *request);
+    inline void do_snoop_IS (Mreq *request);    //added
+    inline void do_snoop_IM (Mreq *request);    //added
+    inline void do_snoop_SM (Mreq *request);    //added
 };
 
 #endif // _MSI_CACHE_H
