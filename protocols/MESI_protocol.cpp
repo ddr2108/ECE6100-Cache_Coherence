@@ -150,6 +150,8 @@ inline void MESI_protocol::do_snoop_S (Mreq *request)
 {
     switch (request->msg) {
     case GETS:
+        //So that IM will know whether to make exclusive
+        set_shared_line();
         break;
     case GETM:
         //Changed to invalid
@@ -172,7 +174,7 @@ inline void MESI_protocol::do_snoop_E (Mreq *request)
         state = MESI_CACHE_S;
         break;
     case GETM:
-        //set_shared_line();
+        set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
         state = MESI_CACHE_I;
         break;
@@ -193,7 +195,7 @@ inline void MESI_protocol::do_snoop_M (Mreq *request)
         state = MESI_CACHE_S;
         break;
     case GETM:
-        //set_shared_line();
+        set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
         state = MESI_CACHE_I;
         break;

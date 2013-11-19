@@ -172,7 +172,7 @@ inline void MOSI_protocol::do_snoop_O (Mreq *request)
         set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
         //Changed to shared state
-        state = MOSI_CACHE_S;
+        state = MOSI_CACHE_I;
         break;
     case DATA: 
         break;
@@ -197,8 +197,8 @@ inline void MOSI_protocol::do_snoop_M (Mreq *request)
         //give data
         set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
-        //now just sharing data
-        state = MOSI_CACHE_S;
+        //now invalidated
+        state = MOSI_CACHE_I;
         break;
     case DATA:
         break;
@@ -234,14 +234,9 @@ inline void MOSI_protocol::do_snoop_IM (Mreq *request)
     case GETM:
         break;
     case DATA:
-        //get data
+        //get data and set to modified
         send_DATA_to_proc(request->addr);
-        //Depending on who sent the data, make it an owner or modifed state
-        //if (get_shared_line()){
-        //    state = MOSI_CACHE_O;
-        //} else{
-            state = MOSI_CACHE_M;            
-        //}
+        state = MOSI_CACHE_M;            
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
