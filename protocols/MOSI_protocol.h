@@ -12,7 +12,10 @@ typedef enum {
     MOSI_CACHE_I = 1,
     MOSI_CACHE_S,
     MOSI_CACHE_O,
-    MOSI_CACHE_M
+    MOSI_CACHE_M,
+    MOSI_CACHE_IS,
+    MOSI_CACHE_IM,
+    MOSI_CACHE_SM
 } MOSI_cache_state_t;
 
 class MOSI_protocol : public Protocol {
@@ -35,6 +38,10 @@ public:
     inline void do_snoop_S (Mreq *request);
     inline void do_snoop_O (Mreq *request);
     inline void do_snoop_M (Mreq *request);
+    inline void do_snoop_IS (Mreq *request);    //added
+    inline void do_snoop_IM (Mreq *request);    //added
+    inline void do_snoop_SM (Mreq *request);    //added
+
 };
 
 #endif // _MOSI_CACHE_H

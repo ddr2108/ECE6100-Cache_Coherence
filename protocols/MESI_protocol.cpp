@@ -11,6 +11,9 @@ extern Simulator *Sim;
 MESI_protocol::MESI_protocol (Hash_table *my_table, Hash_entry *my_entry)
     : Protocol (my_table, my_entry)
 {
+    // Initialize lines to not have the data yet!
+    this->state = MESI_CACHE_I;
+
 }
 
 MESI_protocol::~MESI_protocol ()
@@ -19,66 +22,241 @@ MESI_protocol::~MESI_protocol ()
 
 void MESI_protocol::dump (void)
 {
-    const char *block_states[5] = {"X","I","S","E","M"};
+    const char *block_states[8] = {"X","I","S","E","M", "IS", "IM", "SM"};
     fprintf (stderr, "MESI_protocol - state: %s\n", block_states[state]);
 }
 
 void MESI_protocol::process_cache_request (Mreq *request)
 {
-	switch (state) {
-
+    switch (state) {
+    case MESI_CACHE_I:  do_cache_I (request); break;
+    case MESI_CACHE_S:  do_cache_S (request); break;
+    case MESI_CACHE_E:  do_cache_E (request); break;
+    case MESI_CACHE_M:  do_cache_M (request); break;
+    case MESI_CACHE_IM: case MESI_CACHE_IS: case MESI_CACHE_SM: break;
     default:
         fatal_error ("Invalid Cache State for MESI Protocol\n");
+        break;
     }
 }
 
 void MESI_protocol::process_snoop_request (Mreq *request)
 {
-	switch (state) {
-
-
+    switch (state) {
+    case MESI_CACHE_I:  do_snoop_I (request); break;
+    case MESI_CACHE_S:  do_snoop_S (request); break;
+    case MESI_CACHE_E:  do_snoop_E (request); break;
+    case MESI_CACHE_M:  do_snoop_M (request); break;
+    case MESI_CACHE_IS:  do_snoop_IS (request); break;
+    case MESI_CACHE_IM:  do_snoop_IM (request); break;
+    case MESI_CACHE_SM:  do_snoop_SM (request); break;
     default:
-    	fatal_error ("Invalid Cache State for MESI Protocol\n");
+        fatal_error ("Invalid Cache State for MESI Protocol\n");
     }
 }
 
 inline void MESI_protocol::do_cache_I (Mreq *request)
 {
-
+    switch (request->msg) {
+    case LOAD:
+        //Request data
+        send_GETS(request->addr);
+        state = MESI_CACHE_IS;
+        //cache miss
+        Sim->cache_misses++;
+        break;
+    case STORE:
+        //Request data to modify
+        send_GETM(request->addr);
+        state = MESI_CACHE_IM;
+        //cache miss
+        Sim->cache_misses++;
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
 inline void MESI_protocol::do_cache_S (Mreq *request)
 {
-
+    switch (request->msg) {
+    case LOAD:
+        //send data
+        send_DATA_to_proc(request->addr);
+        break;
+    case STORE:
+        //ask for data
+        send_GETM(request->addr);
+        state = MESI_CACHE_SM;
+        //Compulsory Miss
+        Sim->cache_misses++;
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
 inline void MESI_protocol::do_cache_E (Mreq *request)
 {
-
+    switch (request->msg) {
+    case LOAD:
+        //send data
+        send_DATA_to_proc(request->addr);
+        break;
+    case STORE:
+        //send data
+        send_DATA_to_proc(request->addr);
+        state = MESI_CACHE_M;
+        //Silent upgrade
+        Sim->silent_upgrades++;
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
 inline void MESI_protocol::do_cache_M (Mreq *request)
 {
-
+    switch (request->msg) {
+    case LOAD:
+    case STORE:
+        //send data to processor
+        send_DATA_to_proc(request->addr);
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
 inline void MESI_protocol::do_snoop_I (Mreq *request)
 {
-
+    //dont need to do anything
+    switch (request->msg) {
+    case GETS:
+    case GETM:
+    case DATA:
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
 inline void MESI_protocol::do_snoop_S (Mreq *request)
 {
-
+    switch (request->msg) {
+    case GETS:
+        break;
+    case GETM:
+        //Changed to invalid
+        state = MESI_CACHE_I;
+        break;
+    case DATA:
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
 inline void MESI_protocol::do_snoop_E (Mreq *request)
 {
-
+    switch (request->msg) {
+    case GETS:
+        set_shared_line();
+        send_DATA_on_bus(request->addr,request->src_mid);
+        state = MESI_CACHE_S;
+        break;
+    case GETM:
+        //set_shared_line();
+        send_DATA_on_bus(request->addr,request->src_mid);
+        state = MESI_CACHE_I;
+        break;
+    case DATA:
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
 inline void MESI_protocol::do_snoop_M (Mreq *request)
 {
-
+    switch (request->msg) {
+    case GETS:
+        set_shared_line();
+        send_DATA_on_bus(request->addr,request->src_mid);
+        state = MESI_CACHE_S;
+        break;
+    case GETM:
+        //set_shared_line();
+        send_DATA_on_bus(request->addr,request->src_mid);
+        state = MESI_CACHE_I;
+        break;
+    case DATA:
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
 }
 
+inline void MESI_protocol::do_snoop_IS (Mreq *request)
+{
+    switch (request->msg) {
+    case GETS:
+    case GETM:
+        break;
+    case DATA:
+        //Determine state based on whether it came from a shared state
+        if (get_shared_line()){
+            state = MESI_CACHE_S;
+        } else{
+            state = MESI_CACHE_E;            
+        }
+        //send data
+        send_DATA_to_proc(request->addr);
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
+}
+
+inline void MESI_protocol::do_snoop_IM (Mreq *request)
+{
+    switch (request->msg) {
+    case GETS:
+    case GETM:
+        break;
+    case DATA:
+        //get data
+        state = MESI_CACHE_M;
+        send_DATA_to_proc(request->addr);
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
+}
+
+inline void MESI_protocol::do_snoop_SM (Mreq *request)
+{
+    switch (request->msg) {
+    case GETS:
+    case GETM:
+        break;
+    case DATA:
+        //Get data
+        state = MESI_CACHE_M;
+        send_DATA_to_proc(request->addr);
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
+}

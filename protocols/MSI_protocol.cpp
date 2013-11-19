@@ -86,12 +86,13 @@ inline void MSI_protocol::do_cache_S (Mreq *request)
         //ask for data
         send_GETM(request->addr);
         //request data;
-        state = MSI_CACHE_IM;
+        state = MSI_CACHE_SM;
+        //Coherence miss
+        Sim->cache_misses++;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
         fatal_error ("Client: I state shouldn't see this message\n");
-
     }
 }
 
@@ -100,12 +101,69 @@ inline void MSI_protocol::do_cache_M (Mreq *request)
     switch (request->msg) {
     case LOAD:
     case STORE:
+        //give processor data
         send_DATA_to_proc(request->addr);
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
         fatal_error ("Client: I state shouldn't see this message\n");
+    }
 
+}
+
+inline void MSI_protocol::do_snoop_I (Mreq *request)
+{
+    //dont need to do anything
+    switch (request->msg) {
+    case GETS:
+    case GETM:
+    case DATA:
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
+}
+
+inline void MSI_protocol::do_snoop_S (Mreq *request)
+{
+    switch (request->msg) {
+    case GETS:
+        break;
+    case GETM:
+        //Changed to invalid
+        state = MSI_CACHE_I;
+        break;
+    case DATA:
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
+    }
+}
+
+inline void MSI_protocol::do_snoop_M (Mreq *request)
+{
+    switch (request->msg) {
+    case GETS:
+        //Send Data
+        set_shared_line();
+        send_DATA_on_bus(request->addr,request->src_mid);
+        //Change to shared
+        state = MSI_CACHE_S;
+        break;
+    case GETM:
+        //Send date
+        set_shared_line();
+        send_DATA_on_bus(request->addr,request->src_mid);
+        //Change to invalid
+        state = MSI_CACHE_I;
+        break;
+    case DATA:
+        break;
+    default:
+        request->print_msg (my_table->moduleID, "ERROR");
+        fatal_error ("Client: I state shouldn't see this message\n");
     }
 
 }
@@ -124,7 +182,6 @@ inline void MSI_protocol::do_snoop_IS (Mreq *request)
     default:
         request->print_msg (my_table->moduleID, "ERROR");
         fatal_error ("Client: I state shouldn't see this message\n");
-
     }
 }
 
@@ -161,70 +218,4 @@ inline void MSI_protocol::do_snoop_SM (Mreq *request)
         request->print_msg (my_table->moduleID, "ERROR");
         fatal_error ("Client: I state shouldn't see this message\n");
     }
-}
-
-inline void MSI_protocol::do_snoop_I (Mreq *request)
-{
-    //dont need to do anythin
-    switch (request->msg) {
-    case GETS:
-    case GETM:
-    case DATA:
-        break;
-    default:
-        request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
-    }
-}
-
-inline void MSI_protocol::do_snoop_S (Mreq *request)
-{
-    switch (request->msg) {
-    case GETS:
-    /*        fprintf(stderr, "hello1\n");
-        if (!get_shared_line()){
-
-        //Send data
-        set_shared_line();
-        send_DATA_on_bus(request->addr,request->src_mid);
-    }*/
-        break;
-    case GETM:
-        state = MSI_CACHE_I;
-        break;
-    case DATA:
-        break;
-    default:
-        request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
-    }
-}
-
-inline void MSI_protocol::do_snoop_M (Mreq *request)
-{
-    switch (request->msg) {
-    case GETS:
-            fprintf(stderr, "hello2\n");
-        if (!get_shared_line()){
-        set_shared_line();
-        send_DATA_on_bus(request->addr,request->src_mid);
-        state = MSI_CACHE_S;
-    }
-        break;
-    case GETM:
-            fprintf(stderr, "hello3\n");
-        if (!get_shared_line()){
-
-        set_shared_line();
-        send_DATA_on_bus(request->addr,request->src_mid);
-        state = MSI_CACHE_I;
-    }
-        break;
-    case DATA:
-        break;
-    default:
-        request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
-    }
-
 }
