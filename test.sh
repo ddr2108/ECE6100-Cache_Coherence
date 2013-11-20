@@ -1,10 +1,11 @@
 make;
+rm a;
 echo "Start-4"
 ./sim_trace -t ./traces/4proc_validation/ -p MSI 2>>a;
 diff a ./traces/4proc_validation/MSI_validation.txt;
 rm a;
 echo "MSI-4"
-./sim_trace -t ./traces/4proc_validation/ -p MESI 2>>a;
+./sim_trace -t ./traces/4proc_validation/ -p MOSI 2>>a;
 diff a ./traces/4proc_validation/MOSI_validation.txt;
 rm a;
 echo "MOSI-4"

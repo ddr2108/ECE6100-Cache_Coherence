@@ -13,7 +13,7 @@ MOESIF_protocol::MOESIF_protocol (Hash_table *my_table, Hash_entry *my_entry)
 {
     // Initialize lines to not have the data yet
     this->state = MOESIF_CACHE_I;
-    isOwner = 0;
+    isOwner = -1;
     isForward = 0;
 }
 
@@ -153,7 +153,7 @@ inline void MOESIF_protocol::do_cache_O (Mreq *request)
         send_DATA_to_proc(request->addr);
         break;
     case STORE:
-        isOwner =1;    //Set flag saying it was owner
+        isOwner =request->src_mid.nodeID;    //Set flag saying it was owner
         //ask for data
         send_GETM(request->addr);
         state = MOESIF_CACHE_SM;
@@ -207,7 +207,6 @@ inline void MOESIF_protocol::do_snoop_F (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_I (Mreq *request)
 {
-    fprintf(stderr, "1\n");
     //dont need to do anything
     switch (request->msg) {
     case GETS:
@@ -223,7 +222,6 @@ inline void MOESIF_protocol::do_snoop_I (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_S (Mreq *request)
 {
-        fprintf(stderr, "2\n");
 
     switch (request->msg) {
     case GETS:
@@ -245,7 +243,6 @@ inline void MOESIF_protocol::do_snoop_S (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_E (Mreq *request)
 {
-        fprintf(stderr, "3\n");
 
     switch (request->msg) {
     case GETS:
@@ -274,7 +271,6 @@ inline void MOESIF_protocol::do_snoop_E (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_O (Mreq *request)
 {
-        fprintf(stderr, "4\n");
 
     switch (request->msg) {
     case GETS:
@@ -300,7 +296,6 @@ inline void MOESIF_protocol::do_snoop_O (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_M (Mreq *request)
 {
-        fprintf(stderr, "5\n");
 
     switch (request->msg) {
     case GETS:
@@ -327,7 +322,6 @@ inline void MOESIF_protocol::do_snoop_M (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_IS (Mreq *request)
 {
-        fprintf(stderr, "6\n");
 
     switch (request->msg) {
     case GETS:
@@ -351,7 +345,6 @@ inline void MOESIF_protocol::do_snoop_IS (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_IM (Mreq *request)
 {
-        fprintf(stderr, "7\n");
 
     switch (request->msg) {
     case GETS:
@@ -371,7 +364,6 @@ inline void MOESIF_protocol::do_snoop_IM (Mreq *request)
 
 inline void MOESIF_protocol::do_snoop_SM (Mreq *request)
 {
-        fprintf(stderr, "8\n");
 
     switch (request->msg) {
     case GETS:
@@ -379,21 +371,38 @@ inline void MOESIF_protocol::do_snoop_SM (Mreq *request)
             //give data
             send_DATA_on_bus(request->addr,request->src_mid);
         }
+        if(isOwner!=-1 && !get_shared_line()){
+            //give data
+            send_DATA_on_bus(request->addr,request->src_mid);
+        }
 
         //Tell it is shared currently
         set_shared_line();
+        break;
     case GETM:
 
-        if((isOwner==1||isForward==1) && !get_shared_line()){
+        if(isForward==1 && !get_shared_line()){
             //give data
             set_shared_line();
             send_DATA_on_bus(request->addr,request->src_mid);
         }
+        if(isOwner!=-1 && !get_shared_line()){
+            //give data
+            set_shared_line();
+            send_DATA_on_bus(request->addr,request->src_mid);
+        }
+        if (request->src_mid.nodeID != isOwner){
+             //Change state
+            state = MOESIF_CACHE_IM;
+            //Reset flag
+            isOwner = -1;
+        }
+
 
         break;
     case DATA:
         //Reset flag
-        isOwner = 0;
+        isOwner = -1;
         isForward = 0;
 
         //Get data
