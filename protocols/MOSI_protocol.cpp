@@ -13,6 +13,8 @@ MOSI_protocol::MOSI_protocol (Hash_table *my_table, Hash_entry *my_entry)
 {
     // Initialize lines to not have the data yet!
     this->state = MOSI_CACHE_I;
+        isOwner = 0;
+
 }
 
 MOSI_protocol::~MOSI_protocol ()
@@ -105,8 +107,7 @@ inline void MOSI_protocol::do_cache_O (Mreq *request)
         send_DATA_to_proc(request->addr);
         break;
     case STORE:
-        flag =1;    //Set flag saying it was owner
-    
+        isOwner =1;    //Set flag saying it was owner
         //ask for data
         send_GETM(request->addr);
         state = MOSI_CACHE_SM;
@@ -258,15 +259,18 @@ inline void MOSI_protocol::do_snoop_SM (Mreq *request)
     switch (request->msg) {
     case GETS:
     case GETM:
-    fprintf(stderr, "1\n");
-        if(flag==1){
+
+        if(isOwner==1 && !get_shared_line()){
             //give data
             set_shared_line();
             send_DATA_on_bus(request->addr,request->src_mid);
         }
-        flag = 0;
+
         break;
     case DATA:
+        //Reset flag
+        isOwner = 0;
+
         //Get data
         send_DATA_to_proc(request->addr);
         

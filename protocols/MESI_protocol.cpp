@@ -13,7 +13,6 @@ MESI_protocol::MESI_protocol (Hash_table *my_table, Hash_entry *my_entry)
 {
     // Initialize lines to not have the data yet!
     this->state = MESI_CACHE_I;
-
 }
 
 MESI_protocol::~MESI_protocol ()
