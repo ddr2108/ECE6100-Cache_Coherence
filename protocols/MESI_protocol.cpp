@@ -259,6 +259,8 @@ inline void MESI_protocol::do_snoop_SM (Mreq *request)
 {
     switch (request->msg) {
     case GETS:
+        //Tell it is shared currently
+        set_shared_line();
     case GETM:
         break;
     case DATA:
