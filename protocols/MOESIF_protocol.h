@@ -28,6 +28,7 @@ public:
     MOESIF_cache_state_t state;
     
     int isOwner;
+    int isForward;
 
     void process_cache_request (Mreq *request);
     void process_snoop_request (Mreq *request);
