@@ -75,7 +75,7 @@ inline void MOSI_protocol::do_cache_I (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 }
 
@@ -95,7 +95,7 @@ inline void MOSI_protocol::do_cache_S (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 }
 
@@ -116,7 +116,7 @@ inline void MOSI_protocol::do_cache_O (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 }
 
@@ -130,7 +130,7 @@ inline void MOSI_protocol::do_cache_M (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 
 }
@@ -145,7 +145,7 @@ inline void MOSI_protocol::do_snoop_I (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 
 }
@@ -163,7 +163,7 @@ inline void MOSI_protocol::do_snoop_S (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 
 }
@@ -187,7 +187,7 @@ inline void MOSI_protocol::do_snoop_O (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 
 }
@@ -213,7 +213,7 @@ inline void MOSI_protocol::do_snoop_M (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 
 }
@@ -232,7 +232,7 @@ inline void MOSI_protocol::do_snoop_IS (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 }
 
@@ -250,7 +250,7 @@ inline void MOSI_protocol::do_snoop_IM (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 }
 
@@ -279,6 +279,6 @@ inline void MOSI_protocol::do_snoop_SM (Mreq *request)
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
-        fatal_error ("Client: I state shouldn't see this message\n");
+        fatal_error ("Client: State shouldn't see this message\n");
     }
 }
