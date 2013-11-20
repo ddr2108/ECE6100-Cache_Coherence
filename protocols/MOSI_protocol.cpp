@@ -13,7 +13,7 @@ MOSI_protocol::MOSI_protocol (Hash_table *my_table, Hash_entry *my_entry)
 {
     // Initialize lines to not have the data yet!
     this->state = MOSI_CACHE_I;
-        isOwner = 0;
+    isOwner = 0;
 
 }
 

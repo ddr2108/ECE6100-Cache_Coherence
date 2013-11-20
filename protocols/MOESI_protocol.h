@@ -13,7 +13,10 @@ typedef enum {
     MOESI_CACHE_S,
     MOESI_CACHE_E,
     MOESI_CACHE_O,
-    MOESI_CACHE_M
+    MOESI_CACHE_M,
+    MOESI_CACHE_IS,
+    MOESI_CACHE_IM,
+    MOESI_CACHE_SM
 } MOESI_cache_state_t;
 
 class MOESI_protocol : public Protocol {
@@ -23,6 +26,8 @@ public:
 
     MOESI_cache_state_t state;
     
+    int isOwner;
+
     void process_cache_request (Mreq *request);
     void process_snoop_request (Mreq *request);
     void dump (void);
@@ -38,6 +43,10 @@ public:
     inline void do_snoop_E (Mreq *request);
     inline void do_snoop_O (Mreq *request);
     inline void do_snoop_M (Mreq *request);
+    inline void do_snoop_IS (Mreq *request);    //added
+    inline void do_snoop_IM (Mreq *request);    //added
+    inline void do_snoop_SM (Mreq *request);    //added
+
 };
 
 #endif // _MOESI_CACHE_H
