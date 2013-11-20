@@ -25,6 +25,9 @@ public:
 
     MOSI_cache_state_t state;
     
+    int flag = 0;
+    paddr_t msg;
+
     void process_cache_request (Mreq *request);
     void process_snoop_request (Mreq *request);
     void dump (void);

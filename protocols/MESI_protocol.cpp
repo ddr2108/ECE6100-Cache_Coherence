@@ -82,14 +82,14 @@ inline void MESI_protocol::do_cache_S (Mreq *request)
 {
     switch (request->msg) {
     case LOAD:
-        //send data
+        //send data to processor
         send_DATA_to_proc(request->addr);
         break;
     case STORE:
         //ask for data
         send_GETM(request->addr);
         state = MESI_CACHE_SM;
-        //Compulsory Miss
+        //coherence Miss
         Sim->cache_misses++;
         break;
     default:
@@ -102,11 +102,11 @@ inline void MESI_protocol::do_cache_E (Mreq *request)
 {
     switch (request->msg) {
     case LOAD:
-        //send data
+        //send data to processor
         send_DATA_to_proc(request->addr);
         break;
     case STORE:
-        //send data
+        //send data to processor
         send_DATA_to_proc(request->addr);
         state = MESI_CACHE_M;
         //Silent upgrade
@@ -169,13 +169,17 @@ inline void MESI_protocol::do_snoop_E (Mreq *request)
 {
     switch (request->msg) {
     case GETS:
+        //Send Data
         set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
+        //Change to shared
         state = MESI_CACHE_S;
         break;
     case GETM:
+        //Send Data
         set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
+        //Change to invalid
         state = MESI_CACHE_I;
         break;
     case DATA:
@@ -190,13 +194,17 @@ inline void MESI_protocol::do_snoop_M (Mreq *request)
 {
     switch (request->msg) {
     case GETS:
+        //Send Data
         set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
+        //Change to shared
         state = MESI_CACHE_S;
         break;
     case GETM:
+        //Send Data
         set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
+        //Changed to invalid
         state = MESI_CACHE_I;
         break;
     case DATA:
@@ -214,14 +222,14 @@ inline void MESI_protocol::do_snoop_IS (Mreq *request)
     case GETM:
         break;
     case DATA:
+        //send data to processor
+        send_DATA_to_proc(request->addr);
         //Determine state based on whether it came from a shared state
         if (get_shared_line()){
             state = MESI_CACHE_S;
         } else{
             state = MESI_CACHE_E;            
         }
-        //send data
-        send_DATA_to_proc(request->addr);
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
@@ -236,9 +244,10 @@ inline void MESI_protocol::do_snoop_IM (Mreq *request)
     case GETM:
         break;
     case DATA:
-        //get data
-        state = MESI_CACHE_M;
+        //send data to processor
         send_DATA_to_proc(request->addr);
+        //Change state to modified
+        state = MESI_CACHE_M;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
@@ -253,9 +262,10 @@ inline void MESI_protocol::do_snoop_SM (Mreq *request)
     case GETM:
         break;
     case DATA:
-        //Get data
-        state = MESI_CACHE_M;
+        //send data to processor
         send_DATA_to_proc(request->addr);
+        //Change state to modified
+        state = MESI_CACHE_M;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");

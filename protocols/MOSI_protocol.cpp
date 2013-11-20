@@ -81,14 +81,14 @@ inline void MOSI_protocol::do_cache_S (Mreq *request)
 {
     switch (request->msg) {
     case LOAD:
-        //send data
+        //send data to processor
         send_DATA_to_proc(request->addr);
         break;
     case STORE:
         //ask for data
         send_GETM(request->addr);
         state = MOSI_CACHE_SM;
-        //Compulsory Miss
+        //Coherence Miss
         Sim->cache_misses++;
         break;
     default:
@@ -101,9 +101,17 @@ inline void MOSI_protocol::do_cache_O (Mreq *request)
 {
     switch (request->msg) {
     case LOAD:
-    case STORE:
         //send data to processor
         send_DATA_to_proc(request->addr);
+        break;
+    case STORE:
+        flag =1;    //Set flag saying it was owner
+    
+        //ask for data
+        send_GETM(request->addr);
+        state = MOSI_CACHE_SM;
+        //Coherence Miss
+        Sim->cache_misses++;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
@@ -171,7 +179,7 @@ inline void MOSI_protocol::do_snoop_O (Mreq *request)
         //give data
         set_shared_line();
         send_DATA_on_bus(request->addr,request->src_mid);
-        //Changed to shared state
+        //Changed to invalid state
         state = MOSI_CACHE_I;
         break;
     case DATA: 
@@ -216,10 +224,10 @@ inline void MOSI_protocol::do_snoop_IS (Mreq *request)
     case GETM:
         break;
     case DATA:
-        //Changed to shared state state
-        state = MOSI_CACHE_S;
         //send data
         send_DATA_to_proc(request->addr);
+        //Changed to shared state state
+        state = MOSI_CACHE_S;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
@@ -236,7 +244,8 @@ inline void MOSI_protocol::do_snoop_IM (Mreq *request)
     case DATA:
         //get data and set to modified
         send_DATA_to_proc(request->addr);
-        state = MOSI_CACHE_M;            
+        //Change to modify state
+        state = MOSI_CACHE_M;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
@@ -249,11 +258,19 @@ inline void MOSI_protocol::do_snoop_SM (Mreq *request)
     switch (request->msg) {
     case GETS:
     case GETM:
+    fprintf(stderr, "1\n");
+        if(flag==1){
+            //give data
+            set_shared_line();
+            send_DATA_on_bus(request->addr,request->src_mid);
+        }
+        flag = 0;
         break;
     case DATA:
         //Get data
         send_DATA_to_proc(request->addr);
-        //Change to owner state
+        
+        //Change to modify state
         state = MOSI_CACHE_M;
         break;
     default:

@@ -56,15 +56,17 @@ inline void MSI_protocol::do_cache_I (Mreq *request)
 {
     switch (request->msg) {
     case LOAD:
-        //Request data
+        //ask for data
         send_GETS(request->addr);
+        //Put in intermediate state
         state = MSI_CACHE_IS;
         //cache miss
         Sim->cache_misses++;
         break;
     case STORE:
-        //Request data to modify
+        //ask for data
         send_GETM(request->addr);
+        //Put in intermediate state
         state = MSI_CACHE_IM;
         //cache miss
         Sim->cache_misses++;
@@ -85,7 +87,7 @@ inline void MSI_protocol::do_cache_S (Mreq *request)
     case STORE:
         //ask for data
         send_GETM(request->addr);
-        //request data;
+        //Put in intermediate state
         state = MSI_CACHE_SM;
         //Coherence miss
         Sim->cache_misses++;
@@ -131,7 +133,7 @@ inline void MSI_protocol::do_snoop_S (Mreq *request)
     case GETS:
         break;
     case GETM:
-        //Changed to invalid
+        //Changed to invalid since other modifying
         state = MSI_CACHE_I;
         break;
     case DATA:
@@ -175,9 +177,10 @@ inline void MSI_protocol::do_snoop_IS (Mreq *request)
     case GETM:
         break;
     case DATA:
-        //get data
-        state = MSI_CACHE_S;
+        //send data to processor
         send_DATA_to_proc(request->addr);
+        //Change state to shared
+        state = MSI_CACHE_S;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
@@ -193,9 +196,10 @@ inline void MSI_protocol::do_snoop_IM (Mreq *request)
     case GETM:
         break;
     case DATA:
-        //get data
-        state = MSI_CACHE_M;
+        //send data to processor
         send_DATA_to_proc(request->addr);
+        //Change state to modified
+        state = MSI_CACHE_M;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
@@ -210,9 +214,10 @@ inline void MSI_protocol::do_snoop_SM (Mreq *request)
     case GETM:
         break;
     case DATA:
-        //Get data
-        state = MSI_CACHE_M;
+        //send data to processor
         send_DATA_to_proc(request->addr);
+        //change state to modified
+        state = MSI_CACHE_M;
         break;
     default:
         request->print_msg (my_table->moduleID, "ERROR");
